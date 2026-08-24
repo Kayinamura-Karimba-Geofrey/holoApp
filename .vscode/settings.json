@@ -1,0 +1,9 @@
+{
+  "task.allowAutomaticTasks": false,
+  "security.workspace.trust.enabled": true,
+  "git.autofetch": false,
+  "files.associations": {
+    "*.bat": "plaintext",
+    "*.cmd": "plaintext"
+  }
+}
