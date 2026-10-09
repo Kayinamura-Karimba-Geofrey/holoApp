@@ -11,8 +11,8 @@ exports.register = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
     try {
-        const token = await authService.login(req.body);
-        res.json(token);
+        const result = await authService.login(req.body);
+        res.json(result);
     } catch (err) {
         next(err);
     }
@@ -20,8 +20,8 @@ exports.login = async (req, res, next) => {
 
 exports.logout = async (req, res, next) => {
     try {
-        await authService.logout(req.user);
-        res.json({ message: 'Logged out successfully' });
+        const result = await authService.logout(req.user);
+        res.json(result);
     } catch (err) {
         next(err);
     }
@@ -29,8 +29,8 @@ exports.logout = async (req, res, next) => {
 
 exports.fingerprintLogin = async (req, res, next) => {
     try {
-        const token = await authService.fingerprintLogin(req.body.fingerprintId);
-        res.json(token);
+        const result = await authService.fingerprintLogin(req.body);
+        res.json(result);
     } catch (err) {
         next(err);
     }
@@ -39,7 +39,7 @@ exports.fingerprintLogin = async (req, res, next) => {
 exports.forgotPassword = async (req, res, next) => {
     try {
         await authService.forgotPassword(req.body.email);
-        res.json({ message: 'Reset link sent' });
+        res.json({ message: 'If that email is registered, a reset link has been sent' });
     } catch (err) {
         next(err);
     }
@@ -47,8 +47,8 @@ exports.forgotPassword = async (req, res, next) => {
 
 exports.resetPassword = async (req, res, next) => {
     try {
-        await authService.resetPassword(req.body.token, req.body.newPassword);
-        res.json({ message: 'Password reset successful' });
+        const result = await authService.resetPassword(req.body.token, req.body.newPassword);
+        res.json(result);
     } catch (err) {
         next(err);
     }
@@ -56,8 +56,8 @@ exports.resetPassword = async (req, res, next) => {
 
 exports.refreshToken = async (req, res, next) => {
     try {
-        const newToken = await authService.refreshToken(req.body.refreshToken);
-        res.json(newToken);
+        const tokens = await authService.refreshToken(req.body.refreshToken);
+        res.json(tokens);
     } catch (err) {
         next(err);
     }
