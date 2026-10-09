@@ -1,15 +1,10 @@
+const pinoHttp = require("pino-http");
+const logger = require("../utils/logger");
 
-const morgan = require("morgan");
-const fs = require("fs");
-const path = require("path");
-
-
-const logDir = path.join(__dirname, "../logs");
-fs.mkdirSync(logDir, { recursive: true });
-
-const logStream = fs.createWriteStream(path.join(logDir, "access.log"), { flags: "a" });
-
-
-const logger = morgan("combined", { stream: logStream });
-
-module.exports = logger;
+// Structured request logging to stdout (collected by the hosting platform).
+module.exports = pinoHttp({
+  logger,
+  autoLogging: { ignore: (req) => req.url === "/health" },
+  customLogLevel: (req, res, err) =>
+    err || res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info",
+});
