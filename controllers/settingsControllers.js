@@ -20,7 +20,7 @@ exports.updateSystemSettings = async (req, res, next) => {
 
 exports.getThemes = async (req, res, next) => {
     try {
-        const themes = await settingsService.getThemes();
+        const themes = await settingsService.getThemes(req.user);
         res.json(themes);
     } catch (err) {
         next(err);
@@ -29,7 +29,7 @@ exports.getThemes = async (req, res, next) => {
 
 exports.updateTheme = async (req, res, next) => {
     try {
-        const theme = await settingsService.updateTheme(req.body);
+        const theme = await settingsService.updateTheme(req.user._id, req.body.theme);
         res.json(theme);
     } catch (err) {
         next(err);
