@@ -1,18 +1,20 @@
-let systemSettings = { maintenanceMode: false, version: '1.0.0' };
-let currentTheme = 'dark';
+const SystemSetting = require('../model/systemSetting');
+const User = require('../model/user');
+const { THEMES } = require('../utils/constants');
 
-exports.getSystemSettings = async () => systemSettings;
+const GLOBAL = { key: 'global' };
 
-exports.updateSystemSettings = async (data) => {
-  systemSettings = { ...systemSettings, ...data };
-  return systemSettings;
-};
+exports.getSystemSettings = async () =>
+  SystemSetting.findOneAndUpdate(GLOBAL, {}, { new: true, upsert: true, setDefaultsOnInsert: true });
 
-exports.getThemes = async () => ['dark', 'light', 'neon', 'glass'];
+exports.updateSystemSettings = async (data) =>
+  SystemSetting.findOneAndUpdate(GLOBAL, { $set: data }, {
+    new: true, upsert: true, setDefaultsOnInsert: true, runValidators: true
+  });
 
-exports.updateTheme = async (theme) => {
-  if (!['dark', 'light', 'neon', 'glass'].includes(theme))
-    throw new Error('Invalid theme');
-  currentTheme = theme;
+exports.getThemes = async (user) => ({ themes: THEMES, current: user.preferences.theme });
+
+exports.updateTheme = async (userId, theme) => {
+  await User.updateOne({ _id: userId }, { $set: { 'preferences.theme': theme } }, { runValidators: true });
   return { theme };
 };
