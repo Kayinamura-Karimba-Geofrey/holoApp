@@ -5,8 +5,7 @@ const vrDeviceSchema = new mongoose.Schema({
     type: { type: String, default: 'holo' },
     status: { type: String, default: 'disconnected' },
     ipAddress: { type: String, default: '' },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date }
-});
+    config: { type: Object, default: {} }
+}, { timestamps: true });
 
 module.exports = mongoose.model('VRDevice', vrDeviceSchema);
