@@ -1,5 +1,6 @@
 // middleware/errorHandler.js
 const config = require("../config/env");
+const logger = require("../utils/logger");
 
 // Maps known error types to an HTTP status and a client-safe message.
 const classify = (err) => {
@@ -14,7 +15,7 @@ const classify = (err) => {
 
 module.exports = (err, req, res, next) => {
   const [statusCode, message] = classify(err);
-  if (!err.statusCode && statusCode >= 500) console.error("Error caught:", err);
+  if (!err.statusCode && statusCode >= 500) logger.error({ err }, "Unhandled error");
 
   res.status(statusCode).json({
     success: false,
