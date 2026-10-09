@@ -1,10 +1,11 @@
 const User = require('../model/user');
-const Fingerprint = require('../model/fingerPrint');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const config = require('../config/env');
 const AppError = require('../utils/AppError');
+const emailService = require('./emailService');
+const audit = require('./auditService');
 
 // Used to keep login timing constant when the email doesn't exist.
 const DUMMY_HASH = bcrypt.hashSync('dummy-password-for-timing', 12);
@@ -19,48 +20,40 @@ const issueTokens = (user) => ({
     expiresIn: config.jwt.refreshExpiresIn,
   }),
 });
+exports.issueTokens = issueTokens;
 
-exports.register = async ({ email, password, name, fingerprintId }) => {
+exports.register = async ({ email, password, name }, req) => {
   const existingUser = await User.exists({ email });
   if (existingUser) throw new AppError('Email already registered', 409);
 
   const hashedPassword = await bcrypt.hash(password, 12);
   const user = await User.create({ email, name, password: hashedPassword });
-
-  if (fingerprintId) {
-    await Fingerprint.create({ userId: user._id, fingerprintHash: sha256(fingerprintId) });
-  }
+  await audit.log('auth.register', { userId: user._id, req });
 
   return { ...issueTokens(user), user };
 };
 
-exports.login = async ({ email, password }) => {
+exports.login = async ({ email, password }, req) => {
   const user = await User.findOne({ email }).select('+password');
   // Compare even when the user is missing so response timing doesn't reveal which emails exist.
   const hash = user ? user.password : DUMMY_HASH;
   const isMatch = await bcrypt.compare(password, hash);
-  if (!user || !isMatch) throw new AppError('Invalid email or password', 401);
+  if (!user || !isMatch) {
+    await audit.log('auth.login_failed', { userId: user?._id, email, req });
+    throw new AppError('Invalid email or password', 401);
+  }
 
+  await audit.log('auth.login', { userId: user._id, method: 'password', req });
   return { ...issueTokens(user), user };
 };
 
-exports.logout = async (user) => {
+exports.logout = async (user, req) => {
   await User.updateOne({ _id: user._id }, { $inc: { tokenVersion: 1 } });
+  await audit.log('auth.logout', { userId: user._id, req });
   return { message: 'Logged out successfully' };
 };
 
-exports.fingerprintLogin = async ({ email, fingerprintId }) => {
-  const user = await User.findOne({ email });
-  const record = user && await Fingerprint.findOne({
-    userId: user._id,
-    fingerprintHash: sha256(fingerprintId),
-  });
-  if (!record) throw new AppError('Fingerprint not recognized', 401);
-
-  return { ...issueTokens(user), user };
-};
-
-exports.forgotPassword = async (email) => {
+exports.forgotPassword = async (email, req) => {
   const user = await User.findOne({ email });
   // Always succeed silently so this endpoint can't be used to discover accounts.
   if (!user) return;
@@ -70,13 +63,11 @@ exports.forgotPassword = async (email) => {
   user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
   await user.save();
 
-  // TODO: send this link by email once a mail provider is configured.
-  if (config.env === 'development') {
-    console.log(`Password reset link for ${email}: ${config.baseUrl}/reset-password?token=${resetToken}`);
-  }
+  await emailService.sendPasswordReset(user.email, resetToken);
+  await audit.log('auth.password_reset_requested', { userId: user._id, req });
 };
 
-exports.resetPassword = async (token, newPassword) => {
+exports.resetPassword = async (token, newPassword, req) => {
   const user = await User.findOne({
     resetTokenHash: sha256(token),
     resetTokenExpiry: { $gt: Date.now() }
@@ -88,6 +79,7 @@ exports.resetPassword = async (token, newPassword) => {
   user.resetTokenExpiry = undefined;
   user.tokenVersion += 1;
   await user.save();
+  await audit.log('auth.password_reset', { userId: user._id, req });
 
   return { message: 'Password reset successful' };
 };
