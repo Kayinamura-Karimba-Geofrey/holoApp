@@ -1,19 +1,13 @@
-// validation/holobotValidation.js
+// validations/holobotValidation.js
 const Joi = require("joi");
+const { AI_TONES } = require("../utils/constants");
 
-exports.chatValidation = (data) => {
-  const schema = Joi.object({
-    message: Joi.string().min(1).max(2000).required(),
-    context: Joi.string().max(100).optional(),
-  });
-  return schema.validate(data);
-};
+exports.chatSchema = Joi.object({
+  message: Joi.string().trim().min(1).max(2000).required(),
+  context: Joi.string().max(100).optional(),
+});
 
-exports.settingsValidation = (data) => {
-  const schema = Joi.object({
-    model: Joi.string().valid("gpt-5", "gpt-4o", "groq-llama3").optional(),
-    tone: Joi.string().valid("friendly", "formal", "concise", "creative").optional(),
-    temperature: Joi.number().min(0).max(1).optional(),
-  });
-  return schema.validate(data);
-};
+exports.settingsSchema = Joi.object({
+  tone: Joi.string().valid(...AI_TONES).optional(),
+  temperature: Joi.number().min(0).max(1).optional(),
+}).min(1);
