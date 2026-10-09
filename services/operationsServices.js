@@ -2,6 +2,7 @@ const SystemLog = require('../model/SystemLog');
 const User = require('../model/user');
 const os = require('os');
 const { paginate } = require('../utils/pagination');
+const audit = require('./auditService');
 
 exports.getStats = async () => {
   const [userCount, adminCount, logCount] = await Promise.all([
@@ -21,7 +22,9 @@ exports.getSystemStatus = async () => ({
 
 exports.getLogs = async (pagination) => paginate(SystemLog, {}, pagination);
 
-exports.clearLogs = async () => {
-  await SystemLog.deleteMany();
+exports.clearLogs = async (userId) => {
+  const { deletedCount } = await SystemLog.deleteMany();
+  // Recorded after the wipe so there is always a trace of who cleared the logs.
+  await audit.log('operations.logs_cleared', { userId, deletedCount });
   return { message: 'Logs cleared successfully' };
 };
