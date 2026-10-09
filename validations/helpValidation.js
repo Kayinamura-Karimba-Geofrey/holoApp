@@ -1,12 +1,16 @@
-// validation/helpValidation.js
+// validations/helpValidation.js
 const Joi = require("joi");
 
-exports.articleValidation = (data) => {
-  const schema = Joi.object({
-    title: Joi.string().min(3).max(150).required(),
-    content: Joi.string().min(10).required(),
-    category: Joi.string().optional(),
-    author: Joi.string().optional(),
-  });
-  return schema.validate(data);
+const fields = {
+  title: Joi.string().trim().min(3).max(150),
+  content: Joi.string().min(10).max(50000),
+  category: Joi.string().trim().max(50),
 };
+
+exports.createArticleSchema = Joi.object({
+  title: fields.title.required(),
+  content: fields.content.required(),
+  category: fields.category.optional(),
+});
+
+exports.updateArticleSchema = Joi.object(fields).min(1);
