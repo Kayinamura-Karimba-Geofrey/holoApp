@@ -11,7 +11,7 @@ exports.getSystemSettings = async (req, res, next) => {
 
 exports.updateSystemSettings = async (req, res, next) => {
     try {
-        const settings = await settingsService.updateSystemSettings(req.body);
+        const settings = await settingsService.updateSystemSettings(req.body, req.user._id);
         res.json(settings);
     } catch (err) {
         next(err);
