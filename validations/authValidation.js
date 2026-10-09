@@ -1,42 +1,36 @@
-// validation/authValidation.js
+// validations/authValidation.js
 const Joi = require("joi");
 
-exports.registerValidation = (data) => {
-  const schema = Joi.object({
-    email: Joi.string().email().required(),
-    password: Joi.string().min(8).max(128).required(),
-    fingerprintId: Joi.string().alphanum().min(6).required(),
-  });
-  return schema.validate(data);
-};
+const email = Joi.string().email().lowercase().trim().max(254);
+const password = Joi.string().min(8).max(128);
+const fingerprintId = Joi.string().alphanum().min(6).max(256);
 
-exports.loginValidation = (data) => {
-  const schema = Joi.object({
-    email: Joi.string().email().required(),
-    password: Joi.string().required(),
-  });
-  return schema.validate(data);
-};
+exports.registerSchema = Joi.object({
+  email: email.required(),
+  password: password.required(),
+  name: Joi.string().trim().max(100).optional(),
+  fingerprintId: fingerprintId.optional(),
+});
 
-exports.fingerprintValidation = (data) => {
-  const schema = Joi.object({
-    email: Joi.string().email().required(),
-    fingerprintId: Joi.string().alphanum().required(),
-  });
-  return schema.validate(data);
-};
+exports.loginSchema = Joi.object({
+  email: email.required(),
+  password: Joi.string().max(128).required(),
+});
 
-exports.forgotPasswordValidation = (data) => {
-  const schema = Joi.object({
-    email: Joi.string().email().required(),
-  });
-  return schema.validate(data);
-};
+exports.fingerprintSchema = Joi.object({
+  email: email.required(),
+  fingerprintId: fingerprintId.required(),
+});
 
-exports.resetPasswordValidation = (data) => {
-  const schema = Joi.object({
-    token: Joi.string().required(),
-    newPassword: Joi.string().min(8).max(128).required(),
-  });
-  return schema.validate(data);
-};
+exports.forgotPasswordSchema = Joi.object({
+  email: email.required(),
+});
+
+exports.resetPasswordSchema = Joi.object({
+  token: Joi.string().hex().length(64).required(),
+  newPassword: password.required(),
+});
+
+exports.refreshTokenSchema = Joi.object({
+  refreshToken: Joi.string().required(),
+});
