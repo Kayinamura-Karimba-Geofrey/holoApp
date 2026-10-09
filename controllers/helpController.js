@@ -1,8 +1,9 @@
 const helpService = require('../services/helpServices');
+const { parsePagination } = require('../utils/pagination');
 
 exports.getAllArticles = async (req, res, next) => {
     try {
-        const articles = await helpService.getAllArticles();
+        const articles = await helpService.getAllArticles(parsePagination(req.query));
         res.json(articles);
     } catch (err) {
         next(err);
@@ -20,7 +21,7 @@ exports.getArticleById = async (req, res, next) => {
 
 exports.createArticle = async (req, res, next) => {
     try {
-        const article = await helpService.createArticle(req.body);
+        const article = await helpService.createArticle(req.body, req.user._id);
         res.status(201).json(article);
     } catch (err) {
         next(err);
@@ -38,8 +39,8 @@ exports.updateArticle = async (req, res, next) => {
 
 exports.deleteArticle = async (req, res, next) => {
     try {
-        await helpService.deleteArticle(req.params.id);
-        res.json({ message: 'Article deleted' });
+        const result = await helpService.deleteArticle(req.params.id);
+        res.json(result);
     } catch (err) {
         next(err);
     }
