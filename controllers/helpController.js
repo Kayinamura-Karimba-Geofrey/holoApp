@@ -30,7 +30,7 @@ exports.createArticle = async (req, res, next) => {
 
 exports.updateArticle = async (req, res, next) => {
     try {
-        const article = await helpService.updateArticle(req.params.id, req.body);
+        const article = await helpService.updateArticle(req.params.id, req.body, req.user._id);
         res.json(article);
     } catch (err) {
         next(err);
@@ -39,7 +39,7 @@ exports.updateArticle = async (req, res, next) => {
 
 exports.deleteArticle = async (req, res, next) => {
     try {
-        const result = await helpService.deleteArticle(req.params.id);
+        const result = await helpService.deleteArticle(req.params.id, req.user._id);
         res.json(result);
     } catch (err) {
         next(err);
