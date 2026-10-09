@@ -2,11 +2,15 @@ const express = require('express');
 const router = express.Router();
 const holobotController = require('../controllers/holobotController');
 const authMiddleware = require('../middleware/authMiddleware');
+const validate = require('../middleware/validate');
+const { chatSchema, settingsSchema } = require('../validations/holobotValidation');
 
-router.post('/chat', authMiddleware, holobotController.chat);
-router.get('/history', authMiddleware, holobotController.getHistory);
-router.delete('/clear', authMiddleware, holobotController.clearHistory);
-router.get('/settings', authMiddleware, holobotController.getSettings);
-router.put('/settings', authMiddleware, holobotController.updateSettings);
+router.use(authMiddleware);
+
+router.post('/chat', validate(chatSchema), holobotController.chat);
+router.get('/history', holobotController.getHistory);
+router.delete('/clear', holobotController.clearHistory);
+router.get('/settings', holobotController.getSettings);
+router.put('/settings', validate(settingsSchema), holobotController.updateSettings);
 
 module.exports = router;
