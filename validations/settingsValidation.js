@@ -1,19 +1,13 @@
-// validation/settingsValidation.js
+// validations/settingsValidation.js
 const Joi = require("joi");
+const { THEMES } = require("../utils/constants");
 
-exports.systemSettingsValidation = (data) => {
-  const schema = Joi.object({
-    maintenanceMode: Joi.boolean().optional(),
-    appVersion: Joi.string().optional(),
-    maxUsers: Joi.number().min(1).optional(),
-  });
-  return schema.validate(data);
-};
+exports.systemSettingsSchema = Joi.object({
+  maintenanceMode: Joi.boolean().optional(),
+  version: Joi.string().max(20).optional(),
+  maxUsers: Joi.number().integer().min(1).optional(),
+}).min(1);
 
-exports.themeSettingsValidation = (data) => {
-  const schema = Joi.object({
-    theme: Joi.string().valid("light", "dark", "holo", "neon").required(),
-  });
-  return schema.validate(data);
-};
-
+exports.themeSchema = Joi.object({
+  theme: Joi.string().valid(...THEMES).required(),
+});
