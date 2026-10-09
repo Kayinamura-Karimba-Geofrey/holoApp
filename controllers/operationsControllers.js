@@ -30,7 +30,7 @@ exports.getLogs = async (req, res, next) => {
 
 exports.clearLogs = async (req, res, next) => {
     try {
-        const result = await operationsService.clearLogs();
+        const result = await operationsService.clearLogs(req.user._id);
         res.json(result);
     } catch (err) {
         next(err);
