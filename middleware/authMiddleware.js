@@ -1,24 +1,30 @@
 
 const jwt = require("jsonwebtoken");
 const User = require("../model/user");
+const config = require("../config/env");
+const AppError = require("../utils/AppError");
 
 module.exports = async function (req, res, next) {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ message: "Access denied. No token provided." });
+  const [scheme, token] = (req.headers["authorization"] || "").split(" ");
+  if (scheme !== "Bearer" || !token) {
+    return next(new AppError("Access denied. No token provided.", 401));
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, config.jwt.secret);
+  } catch {
+    return next(new AppError("Invalid or expired token", 401));
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password");
-    if (!user) {
-      return res.status(401).json({ message: "Invalid token: user not found" });
+    const user = await User.findById(decoded.id);
+    if (!user || user.tokenVersion !== decoded.tv) {
+      return next(new AppError("Invalid or expired token", 401));
     }
     req.user = user;
     next();
   } catch (err) {
-    console.error("JWT verification error:", err.message);
-    res.status(403).json({ message: "Invalid or expired token" });
+    next(err);
   }
 };
