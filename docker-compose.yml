@@ -1,6 +1,8 @@
 # Local/staging stack: API + MongoDB + Redis.
 #   cp .env.example .env   # fill in the JWT secrets
 #   docker compose up --build
+# Or run only the databases and the API on the host with `npm run dev`:
+#   docker compose up -d mongo redis
 services:
   api:
     build: .
@@ -12,18 +14,35 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - mongo
-      - redis
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   mongo:
     image: mongo:8
+    # Bound to localhost only, so `npm run dev` on the host can reach it.
+    ports:
+      - "127.0.0.1:27017:27017"
     volumes:
       - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   redis:
     image: redis:7-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
 volumes:
