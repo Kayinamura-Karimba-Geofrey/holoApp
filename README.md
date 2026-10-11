@@ -4,7 +4,13 @@ Backend for HoloApp: authentication (password and passkeys), the Holobot AI assi
 
 ## Getting started
 
-Requires Node.js 20+ and MongoDB (Redis is optional).
+Requires Node.js 20+ and MongoDB (Redis is optional). If you don't have MongoDB installed, start it (and Redis) with Docker:
+
+```bash
+docker compose up -d mongo redis   # listens on localhost:27017 and :6379
+```
+
+Then:
 
 ```bash
 npm install
